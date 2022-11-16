@@ -23,7 +23,144 @@ function cpp_page(){
 }
  
 function cpp_page_callback(){
-	echo 'привет';
+?>
+
+	<form action="#" method="POST">
+        <input type="text" id="cpp_enter_price" name="cpp_enter_price" placeholder="Enter price">
+        
+		<?php
+			$args = array(
+				'post_type' => 'product',
+				'post_status' => 'publish',
+				'posts_per_page' => -1,
+				'orderby' => 'date',
+				'order' => 'DESC',
+				'meta_query' => array(
+					'key' => '_stock_status',
+					'value' => 'instock'
+				),
+			);
+
+			$query = new WP_Query( $args );
+			// echo '<pre>';
+			// print_r($query);
+			// echo '</pre>';
+		?>
+		<select name="cpp_wc_products" id="cpp_wc_products">
+			<?php
+				if ( $query->have_posts() ) :
+					while ( $query->have_posts() ) :
+						$query->the_post();
+						global $post;
+						$product = wc_get_product($post->ID);
+			?>
+						<option value="<?php echo $post->ID; ?>" data-product-type="<?php
+							if( $product->is_type( 'variable' ) ){
+								echo 'variable';
+							} elseif( $product->is_type( 'simple' ) ){
+							   echo 'simple';
+							}
+						?>">
+						<?php the_title();
+						?></option>
+			<?php
+					endwhile;
+				endif;
+			?>
+        </select>
+
+		<?php
+			$args_variable = array (
+				'post_type' => 'product',
+				'post_status' => 'publish',
+				'posts_per_page' => -1,
+				'orderby' => 'date',
+				'order' => 'DESC',
+				'meta_query' => array(
+					'key' => '_stock_status',
+					'value' => 'instock'
+				),
+				'tax_query' => array(
+					array(
+						'taxonomy' => 'product_type',
+						'field'    => 'slug',
+						'terms'    => 'variable', 
+					),
+				),
+			);
+
+			$query_variable = new WP_Query( $args_variable );
+		?>
+
+		<?php
+			if ( $query_variable->have_posts() ) :
+		?>
+			<?php
+				while ( $query_variable->have_posts() ) :
+					$query_variable->the_post();
+					global $post;
+					$product = wc_get_product($post->ID);
+			?>
+			<table class="cpp_wc_variable_table" id="variable_table_<?php echo $post->ID ?>">
+				<?php
+				// если товар вариантивный
+				if ($product->is_type( 'variable' )) :
+					//получаем варианты
+					$available_variations = $product->get_available_variations();
+					foreach ($available_variations as $key => $value) :
+						foreach($value['attributes'] as $key => $valueKey) :
+				?>
+					<tr>
+							<td>
+								<input type="checkbox" name="<?php echo $valueKey ?>" id="<?php echo $key . $valueKey ?>" value="<?php echo $key . $valueKey ?>">
+							</td>
+							<td>
+								<label for="<?php echo $key . $valueKey ?>">
+									<?php echo $valueKey; ?>
+								</label>
+							</td>
+					</tr>
+				<?php
+						endforeach;
+						// echo '<pre>';
+						// print_r($value);
+						// echo '</pre>';
+					endforeach;
+				endif;
+				?>
+			</table>
+			<?php
+				endwhile;
+			?>
+		<?php
+			endif;
+		?>
+
+        <button type="submit">Save</button>
+    </form>
+<?php
 }
 
+/**
+* Check if WooCommerce is active
+**/
+if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', get_option( 'active_plugins' ) ) ) ) {
+    // Put your plugin code here
+
+    // If you want use WooCommerce functions, do that after WooCommerce is loaded
+    add_action( 'woocommerce_loaded', 'update_prices' );        
+}
+
+function update_prices() {
+
+    if (isset($_POST['cpp_enter_price']) && isset($_POST['cpp_wc_products'])) {
+		$product_id = $_POST['cpp_wc_products'];
+		$product = wc_get_product($product_id);
+		if (!$product) return '';
+		$new_price = $_POST['cpp_enter_price'];
+		update_post_meta($product_id, '_regular_price', $new_price);
+		$product->save();
+	}
+
+}
 ?>
