@@ -54,7 +54,7 @@ function cpp_page_callback(){
 						global $post;
 						$product = wc_get_product($post->ID);
 			?>
-						<option value="<?php echo $post->ID; ?>" data-product-type="<?php
+						<option value="<?php echo $post->ID; ?>" id="variable_<?php echo $post->ID; ?>" data-product-type="<?php
 							if( $product->is_type( 'variable' ) ){
 								echo 'variable';
 							} elseif( $product->is_type( 'simple' ) ){
@@ -101,7 +101,7 @@ function cpp_page_callback(){
 					global $post;
 					$product = wc_get_product($post->ID);
 			?>
-			<table class="cpp_wc_variable_table" id="variable_table_<?php echo $post->ID ?>">
+			<table class="cpp_wc_variable_table" data-id="variable_<?php echo $post->ID; ?>">
 				<?php
 				// если товар вариантивный
 				if ($product->is_type( 'variable' )) :
@@ -135,6 +135,40 @@ function cpp_page_callback(){
 		<?php
 			endif;
 		?>
+
+		<script>
+			let selectProduct = document.querySelector('#cpp_wc_products');
+
+			selectProduct.onchange = function(){   
+				let selectOption = this.selectedOptions[0].getAttribute('data-product-type');
+				let selectOptionId = this.selectedOptions[0].id;
+
+				let variableTable = document.querySelectorAll('.cpp_wc_variable_table');
+				variableTable.forEach(table => {
+					if (selectOption == 'simple' && table.classList.contains('active')) {
+						table.classList.remove('active')
+					}
+
+					let variableTableId = table.getAttribute('data-id');
+
+					if (variableTableId == selectOptionId) {
+						table.classList.add('active');
+					} else {
+						table.classList.remove('active');
+					}
+				})
+			};
+		</script>
+
+		<style>
+			.cpp_wc_variable_table {
+				display: none;
+			}
+
+			.cpp_wc_variable_table.active {
+				display: block;
+			}
+		</style>
 
         <button type="submit">Save</button>
     </form>
