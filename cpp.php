@@ -61,9 +61,19 @@ function cpp_page_callback(){
 							   echo 'simple';
 							}
 						?>">
-						<?php the_title();
+						<?php the_title(); 
 						?></option>
 			<?php
+						if (isset($_POST['cpp_enter_price']) && isset($_POST['cpp_wc_products'])) {
+							$new_price = $_POST['cpp_enter_price'];
+							$product_id = $_POST['cpp_wc_products'];
+							$product = wc_get_product($product_id);
+							
+							// if (!$product) return '';
+				
+							$product->set_regular_price($new_price);
+							$product->save();
+						}
 					endwhile;
 				endif;
 			?>
@@ -172,29 +182,24 @@ function cpp_page_callback(){
 
         <button type="submit">Save</button>
     </form>
+
+	<?php
+		// do_action( 'woocommerce_init', 'update_prices' );
+	
+		// function update_prices() {
+		// 	if (isset($_POST['cpp_enter_price']) && isset($_POST['cpp_wc_products'])) {
+		// 		$new_price = $_POST['cpp_enter_price'];
+		// 		$product_id = $_POST['cpp_wc_products'];
+		// 		$product = wc_get_product($product_id);
+
+		// 		// if (!$product) return '';
+	
+		// 		$product->set_regular_price($new_price);
+		// 		$product->save();
+		// 	}
+		// }
+	?>
+
 <?php
-}
-
-/**
-* Check if WooCommerce is active
-**/
-if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', get_option( 'active_plugins' ) ) ) ) {
-    // Put your plugin code here
-
-    // If you want use WooCommerce functions, do that after WooCommerce is loaded
-    add_action( 'woocommerce_loaded', 'update_prices' );        
-}
-
-function update_prices() {
-
-    if (isset($_POST['cpp_enter_price']) && isset($_POST['cpp_wc_products'])) {
-		$product_id = $_POST['cpp_wc_products'];
-		$product = wc_get_product($product_id);
-		if (!$product) return '';
-		$new_price = $_POST['cpp_enter_price'];
-		update_post_meta($product_id, '_regular_price', $new_price);
-		$product->save();
-	}
-
 }
 ?>
