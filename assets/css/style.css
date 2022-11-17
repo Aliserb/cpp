@@ -1,0 +1,7 @@
+.cpp_wc_variable_table {
+    display: none;
+}
+
+.cpp_wc_variable_table.active {
+    display: block;
+}
